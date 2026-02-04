@@ -1,0 +1,137 @@
+diff --git a/code/test/Makefile b/code/test/Makefile
+index 2d0e84c..de3fc8d 100644
+--- a/code/test/Makefile
++++ b/code/test/Makefile
+@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
+ PROGRAMS = unknownhost
+ else
+ # change this if you create a new test program!
+-PROGRAMS = add halt shell matmult sort segments test_syscall num_io char_io random str_io ascii bubblesort help create_file open_file readwrite exec test_sem sinhvien voinuoc main
++PROGRAMS = abs add halt shell matmult sort segments test_syscall num_io char_io random str_io ascii bubblesort help create_file open_file readwrite exec test_sem sinhvien voinuoc main
+ endif
+ 
+ all: $(PROGRAMS)
+@@ -133,6 +133,14 @@ add: add.o start.o
+ 	$(LD) $(LDFLAGS) start.o add.o -o add.coff
+ 	$(COFF2NOFF) add.coff add
+ 
++
++abs.o: abs.c
++	$(CC) $(CFLAGS) -c abs.c
++
++abs: abs.o start.o
++	$(LD) $(LDFLAGS) start.o abs.o -o abs.coff
++	$(COFF2NOFF) abs.coff abs
++
+ shell.o: shell.c
+ 	$(CC) $(CFLAGS) -c shell.c
+ shell: shell.o start.o
+diff --git a/code/test/abs.c b/code/test/abs.c
+new file mode 100644
+index 0000000..207f952
+--- /dev/null
++++ b/code/test/abs.c
+@@ -0,0 +1,8 @@
++#include "syscall.h"
++
++int main(){
++	int number = -50;
++    int result = Abs(number);
++    PrintNum(result);
++    return 0;
++}
+diff --git a/code/test/start.S b/code/test/start.S
+index b607030..27b8644 100644
+--- a/code/test/start.S
++++ b/code/test/start.S
+@@ -58,6 +58,16 @@ Add:
+ 	j 	$31
+ 	.end Add
+ 
++
++
++	.globl Abs
++	.ent	Abs
++Abs:
++	addiu $2,$0,SC_Abs
++	syscall
++	j 	$31
++	.end Abs
++
+ 	.globl Exit
+ 	.ent	Exit
+ Exit:
+diff --git a/code/userprog/exception.cc b/code/userprog/exception.cc
+index a5d02c7..13b25c0 100644
+--- a/code/userprog/exception.cc
++++ b/code/userprog/exception.cc
+@@ -154,6 +154,19 @@ void handle_SC_Add() {
+     return move_program_counter();
+ }
+ 
++void handle_SC_Abs() {
++
++    int result;
++    result = SysAbs(
++        /* int op1 */ (int)kernel->machine->ReadRegister(4));
++
++    DEBUG(dbgSys, "Add returning with " << result << "\n");
++    /* Prepare Result */
++    kernel->machine->WriteRegister(2, (int)result);
++
++    return move_program_counter();
++}
++
+ void handle_SC_ReadNum() {
+     int result = SysReadNum();
+     kernel->machine->WriteRegister(2, result);
+@@ -461,6 +474,8 @@ void ExceptionHandler(ExceptionType which) {
+                     return handle_SC_Signal();
+                 case SC_GetPid:
+                     return handle_SC_GetPid();
++                case SC_Abs:
++                    return handle_SC_Abs();
+                 /**
+                  * Handle all not implemented syscalls
+                  * If you want to write a new handler for syscall:
+diff --git a/code/userprog/ksyscall.h b/code/userprog/ksyscall.h
+index 2bd1a31..f9a2a1f 100644
+--- a/code/userprog/ksyscall.h
++++ b/code/userprog/ksyscall.h
+@@ -15,11 +15,15 @@
+ #include "synchconsole.h"
+ #include "ksyscallhelper.h"
+ #include <stdlib.h>
++#include <limits.h>
++#define INT32_MIN 0
+ 
+ void SysHalt() { kernel->interrupt->Halt(); }
+ 
+ int SysAdd(int op1, int op2) { return op1 + op2; }
+ 
++int SysAbs(int op) { return op > 0 ? op : -op;}
++
+ int SysReadNum() {
+     readUntilBlank();
+ 
+diff --git a/code/userprog/syscall.h b/code/userprog/syscall.h
+index 0865b05..cfd0a19 100644
+--- a/code/userprog/syscall.h
++++ b/code/userprog/syscall.h
+@@ -48,6 +48,7 @@
+ #define SC_Wait 52
+ #define SC_Signal 53
+ #define SC_GetPid 54
++#define SC_Abs 55
+ 
+ #ifndef IN_ASM
+ 
+@@ -68,6 +69,8 @@ void Halt();
+  * Add the two operants and return the result
+  */
+ 
++ int abs(int);
++
+ int Add(int op1, int op2);
+ 
+ int ReadNum();
