@@ -15,10 +15,14 @@
 #include "synchconsole.h"
 #include "ksyscallhelper.h"
 #include <stdlib.h>
+#include <limits.h>
+#define INT32_MIN 0
 
 void SysHalt() { kernel->interrupt->Halt(); }
 
 int SysAdd(int op1, int op2) { return op1 + op2; }
+
+int SysAbs(int op) { return op > 0 ? op : -op;}
 
 int SysReadNum() {
     readUntilBlank();
