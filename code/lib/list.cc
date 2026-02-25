@@ -130,6 +130,21 @@ T List<T>::RemoveFront() {
     return thing;
 }
 
+template <class T>
+T List<T>::ItemAt(int pos) {
+    ListElement<T> *element = first;
+    T thing;
+
+    ASSERT(!IsEmpty());
+    
+    for(int i = 0;i<pos;i++){
+        element = element->next;
+    }
+    thing = element->item;
+    
+    return thing;
+}
+
 //----------------------------------------------------------------------
 // List<T>::Remove
 //      Remove a specific item from the list.  Must be in the list!

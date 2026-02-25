@@ -40,6 +40,7 @@
 #include "copyright.h"
 #include "utility.h"
 #include "sysdep.h"
+#include <cstdlib>
 
 #include "machine.h"
 #include "addrspace.h"
@@ -90,6 +91,8 @@ class Thread {
     int processID;
     int parrentID;
     int exitStatus;
+    int priorityNumber = std::rand()%5;
+
     void FreeSpace() {
         if (space != 0) delete space;
     }
