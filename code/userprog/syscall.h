@@ -49,6 +49,7 @@
 #define SC_Signal 53
 #define SC_GetPid 54
 #define SC_Abs 55
+#define SC_Sleep 56
 
 #ifndef IN_ASM
 
@@ -68,8 +69,6 @@ void Halt();
 /*
  * Add the two operants and return the result
  */
-
- int abs(int);
 
 int Add(int op1, int op2);
 
@@ -212,6 +211,11 @@ int ThreadJoin(ThreadId id);
  * Deletes current thread and returns ExitCode to every waiting lokal thread.
  */
 void ThreadExit(int ExitCode);
+
+unsigned int Abs(int);
+
+void Sleep(int t);  // sleep for t seconds (converted to ticks in kernel)
+
 
 #endif /* IN_ASM */
 

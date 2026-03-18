@@ -15,14 +15,25 @@
 #include "synchconsole.h"
 #include "ksyscallhelper.h"
 #include <stdlib.h>
-#include <limits.h>
+#include "stats.h"
+#include <time.h> 
+
 #define INT32_MIN 0
 
 void SysHalt() { kernel->interrupt->Halt(); }
 
 int SysAdd(int op1, int op2) { return op1 + op2; }
 
-int SysAbs(int op) { return op > 0 ? op : -op;}
+int SysAbs(int op) { return op > 0 ? op:-op;}
+
+void SysSleep(int ticks) {
+    // Convert seconds → ticks: NachOS runs ~100 ticks/second
+    
+    kernel->alarm->WaitUntil(ticks);
+
+    // clock_t start = clock();
+    // while ((double)(clock() - start) / CLOCKS_PER_SEC < (double)seconds) {}
+}
 
 int SysReadNum() {
     readUntilBlank();

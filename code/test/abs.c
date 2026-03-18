@@ -1,8 +1,9 @@
 #include "syscall.h"
 
-int main(){
-	int number = -50;
-    int result = Abs(number);
-    PrintNum(result);
-    return 0;
+int main() {
+    int result = -10;
+    int y;
+    y = Abs(result);
+    PrintNum(y);
+    return result;
 }

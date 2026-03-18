@@ -136,7 +136,15 @@ T List<T>::ItemAt(int pos) {
     T thing;
 
     ASSERT(!IsEmpty());
+
     
+    // if (first == last) {  // list had one item, now has none
+    //     first = NULL;
+    //     last = NULL;
+    // } else {
+    //     first = element->next;
+    // }
+
     for(int i = 0;i<pos;i++){
         element = element->next;
     }

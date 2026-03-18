@@ -11,6 +11,7 @@
 //	end up calling FindNextToRun(), and that would put us in an
 //	infinite loop.
 //
+//
 // 	Very simple implementation -- no priorities, straight FIFO.
 //	Might need to be improved in later assignments.
 //
@@ -56,7 +57,6 @@ void Scheduler::ReadyToRun(Thread *thread) {
     thread->setStatus(READY);
     readyList->Append(thread);
 }
-
 //----------------------------------------------------------------------
 // Scheduler::FindNextToRun
 // 	Return the next thread to be scheduled onto the CPU.
@@ -65,39 +65,35 @@ void Scheduler::ReadyToRun(Thread *thread) {
 //	Thread is removed from the ready list.
 //----------------------------------------------------------------------
 
+
+
 Thread *Scheduler::FindNextToRun() {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
 
     if (readyList->IsEmpty()) {
         return NULL;
-    } else {
-        //return readyList->RemoveFront();
-	cout<<endl;
-	cout<<"______________________"<<endl;
-        //cout<<"NumInList = "<<readyList->NumInList()<<"||"<<endl;
-        // cout<<endl<<"RL->Front"<<readyList->Front()<<endl;
-        // cout<<endl<<"||ItemAt 1"<<readyList->ItemAt(0)<<endl;
-
-        // cout<<"RL"<<readyList<<endl;
-        cout<<"Priority number in readyList:"<<endl;
-        Thread* best = readyList->Front();
-        cout<<best->priorityNumber<<",";
-        for(int i = 1;i<readyList->NumInList();i++){
-            Thread* chk = readyList->ItemAt(i);
-            cout<<chk->priorityNumber<<",";
-            if(chk->priorityNumber > best->priorityNumber){
-                best = chk;
-            }
-        }
-        // cout<<endl<<"RL->Front"<<readyList->Front()<<endl;
-        readyList->Remove(best);
-        // cout<<endl<<"Best"<<best<<endl;
-        cout<<endl<<"Selected Priority number :"<<best->priorityNumber<<endl;
-        cout<<"________________________"<<endl;
-	cout<<endl;
-        return best;
-
     }
+
+    Thread *best = readyList->Front();
+    int listSize = readyList->NumInList();
+
+    // The 'p' flag is for Priority Scheduling Debugging
+    DEBUG('p', "[Priority] Ready list size: " << listSize);
+    DEBUG('p', "[Priority] Checking: " << best->priorityNumber);
+
+    for (int i = 1; i < listSize; i++) {
+        Thread *current = readyList->ItemAt(i);
+        DEBUG('p', ", " << current->priorityNumber);
+
+        if (current->priorityNumber > best->priorityNumber) {
+            best = current;
+        }
+    }
+
+    readyList->Remove(best);
+    DEBUG('p', " | Selected: " << best->priorityNumber << "\n");
+
+    return best;
 }
 
 //----------------------------------------------------------------------

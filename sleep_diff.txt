@@ -1,0 +1,533 @@
+diff --git a/.gitignore b/.gitignore
+index 19c3b5f..691f3f2 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -10,3 +10,4 @@ code/test/*
+ !code/test/Makefile
+ code/DISK_0
+ .vscode/
++code/build.linux/Makefile.dep
+diff --git a/build_test.sh b/build_test.sh
+old mode 100644
+new mode 100755
+diff --git a/code/build.linux/Makefile.dep b/code/build.linux/Makefile.dep
+index b236be0..d7bc40f 100644
+--- a/code/build.linux/Makefile.dep
++++ b/code/build.linux/Makefile.dep
+@@ -4185,15 +4185,7 @@ exception.o: ../userprog/exception.cc /usr/include/stdc-predef.h \
+  ../threads/stable.h ../threads/sem.h ../threads/ptable.h \
+  ../threads/pcb.h ../userprog/syscall.h ../userprog/errno.h \
+  ../userprog/ksyscall.h ../userprog/synchconsole.h ../machine/console.h \
+- ../threads/synch.h ../userprog/ksyscallhelper.h \
+- /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
+- /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
+- /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+- /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+- /usr/include/linux/limits.h \
+- /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+- /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+- /usr/include/x86_64-linux-gnu/bits/uio_lim.h
++ ../threads/synch.h ../userprog/ksyscallhelper.h
+ synchconsole.o: ../userprog/synchconsole.cc /usr/include/stdc-predef.h \
+  ../lib/copyright.h ../userprog/synchconsole.h ../lib/utility.h \
+  ../machine/callback.h ../machine/console.h ../threads/synch.h \
+diff --git a/code/lib/list.cc b/code/lib/list.cc
+index 7305294..9a38c6a 100644
+--- a/code/lib/list.cc
++++ b/code/lib/list.cc
+@@ -136,7 +136,15 @@ T List<T>::ItemAt(int pos) {
+     T thing;
+ 
+     ASSERT(!IsEmpty());
++
+     
++    // if (first == last) {  // list had one item, now has none
++    //     first = NULL;
++    //     last = NULL;
++    // } else {
++    //     first = element->next;
++    // }
++
+     for(int i = 0;i<pos;i++){
+         element = element->next;
+     }
+diff --git a/code/lib/list.h b/code/lib/list.h
+index 1d2d9ec..7af836a 100644
+--- a/code/lib/list.h
++++ b/code/lib/list.h
+@@ -54,7 +54,7 @@ class List {
+     // Return first item on list
+     // without removing it
+     T RemoveFront();      // Take item off the front of the list
+-    T ItemAt(int pos);  
++    T ItemAt(int pos);
+     void Remove(T item);  // Remove specific item from list
+ 
+     bool IsInList(T item) const;  // is the item in the list?
+diff --git a/code/test/Makefile b/code/test/Makefile
+index 30e1629..c1018db 100644
+--- a/code/test/Makefile
++++ b/code/test/Makefile
+@@ -106,13 +106,13 @@ AS = $(GCCDIR)as
+ LD = $(GCCDIR)ld
+ 
+ INCDIR =-I../userprog -I../lib
+-CFLAGS = -G 0 -c $(INCDIR) -B../../usr/local/nachos/lib/gcc-lib/decstation-ultrix/2.95.2/ -B../../usr/local/nachos/decstation-ultrix/bin/
++CFLAGS = -G 0 -c $(INCDIR) -B../../../usr/local/nachos/lib/gcc-lib/decstation-ultrix/2.95.2/ -B../../../usr/local/nachos/decstation-ultrix/bin/
+ 
+ ifeq ($(hosttype),unknown)
+ PROGRAMS = unknownhost
+ else
+ # change this if you create a new test program!
+-PROGRAMS = abs add halt shell matmult sort segments test_syscall num_io char_io random str_io ascii bubblesort help create_file open_file readwrite exec test_sem sinhvien voinuoc main
++PROGRAMS = add abs sleep halt shell matmult sort segments test_syscall num_io char_io random str_io ascii bubblesort help create_file open_file readwrite exec test_sem sinhvien voinuoc main
+ endif
+ 
+ all: $(PROGRAMS)
+@@ -133,14 +133,18 @@ add: add.o start.o
+ 	$(LD) $(LDFLAGS) start.o add.o -o add.coff
+ 	$(COFF2NOFF) add.coff add
+ 
+-
+-abs.o: abs.c
++abs.o : abs.c
+ 	$(CC) $(CFLAGS) -c abs.c
+-
+ abs: abs.o start.o
+ 	$(LD) $(LDFLAGS) start.o abs.o -o abs.coff
+ 	$(COFF2NOFF) abs.coff abs
+ 
++sleep.o : sleep.c
++	$(CC) $(CFLAGS) -c sleep.c
++sleep: sleep.o start.o
++	$(LD) $(LDFLAGS) start.o sleep.o -o sleep.coff
++	$(COFF2NOFF) sleep.coff sleep
++
+ shell.o: shell.c
+ 	$(CC) $(CFLAGS) -c shell.c
+ shell: shell.o start.o
+diff --git a/code/test/Makefile.dep b/code/test/Makefile.dep
+index 0330b6d..1ebbc30 100644
+--- a/code/test/Makefile.dep
++++ b/code/test/Makefile.dep
+@@ -21,9 +21,9 @@ hosttype = unknown
+ 
+ ifeq ($(osname),Linux)
+ # full path name of your cpp program i.e.: 
+-CPP = ../../usr/local/nachos/lib/gcc-lib/decstation-ultrix/2.95.2/cpp
++CPP = ../../../usr/local/nachos/lib/gcc-lib/decstation-ultrix/2.95.2/cpp
+ # directory in which your gcc cross-compiler lives i.e.: 
+-GCCDIR = ../../usr/local/nachos/bin/decstation-ultrix-
++GCCDIR = ../../../usr/local/nachos/bin/decstation-ultrix-
+ LDFLAGS = -T script -N
+ ASFLAGS = -mips2
+ CPPFLAGS = $(INCDIR)
+diff --git a/code/test/abs.c b/code/test/abs.c
+index 207f952..634b9b4 100644
+--- a/code/test/abs.c
++++ b/code/test/abs.c
+@@ -1,8 +1,9 @@
+ #include "syscall.h"
+ 
+-int main(){
+-	int number = -50;
+-    int result = Abs(number);
+-    PrintNum(result);
+-    return 0;
++int main() {
++    int result = -10;
++    int y;
++    y = Abs(result);
++    PrintNum(y);
++    return result;
+ }
+diff --git a/code/test/add.c b/code/test/add.c
+index 70b6925..cb41d92 100644
+--- a/code/test/add.c
++++ b/code/test/add.c
+@@ -11,7 +11,7 @@ int main() {
+     int result;
+ 
+     result = Add(42, 23);
+-
++    PrintNum(result);
+     Halt();
+     /* not reached */
+ }
+diff --git a/code/test/start.S b/code/test/start.S
+index 27b8644..5688ee3 100644
+--- a/code/test/start.S
++++ b/code/test/start.S
+@@ -58,8 +58,6 @@ Add:
+ 	j 	$31
+ 	.end Add
+ 
+-
+-
+ 	.globl Abs
+ 	.ent	Abs
+ Abs:
+@@ -68,8 +66,19 @@ Abs:
+ 	j 	$31
+ 	.end Abs
+ 
++	
++
++	.globl Sleep
++    .ent   Sleep
++Sleep:
++    addiu $2,$0,SC_Sleep   
++    syscall               
++    j     $31              
++    .end  Sleep
++
+ 	.globl Exit
+ 	.ent	Exit
++
+ Exit:
+ 	addiu $2,$0,SC_Exit
+ 	syscall
+diff --git a/code/threads/alarm.cc b/code/threads/alarm.cc
+index ce30385..a2277b4 100644
+--- a/code/threads/alarm.cc
++++ b/code/threads/alarm.cc
+@@ -20,8 +20,33 @@
+ //		occur at random, instead of fixed, intervals.
+ //----------------------------------------------------------------------
+ 
+-Alarm::Alarm(bool doRandom) { timer = new Timer(doRandom, this); }
++Alarm::Alarm(bool doRandom) { timer = new Timer(doRandom, this); sleepCount = 0;}
+ 
++//------------------------------------------------------------------------
++// Alarm:WaitUntill
++// x = number of ticks to sleep
++//------------------------------------------------------------------------
++
++void Alarm::WaitUntil(int x) {
++    // x is seconds directly — no conversion needed
++    clock_t start = clock();
++    while ((double)(clock() - start) / CLOCKS_PER_SEC < (double)x) {}
++
++    IntStatus oldLevel = kernel->interrupt->SetLevel(IntOff);
++    sleepQueue[sleepCount].thread   = kernel->currentThread;
++    sleepQueue[sleepCount].wakeTime = kernel->stats->totalTicks + (x * TimerTicks);
++    sleepCount++;
++
++
++    DEBUG('s', "[Sleep] Thread '" << kernel->currentThread->getName() 
++              << "' sleeping for " << x << " second(s) [100 ticks = 1 sec]. "
++              << "currentTick=" << kernel->stats->totalTicks 
++              << " wakeTime=" << sleepQueue[sleepCount-1].wakeTime << "\n");
++
++
++    kernel->currentThread->Sleep(false);
++    kernel->interrupt->SetLevel(oldLevel);
++}
+ //----------------------------------------------------------------------
+ // Alarm::CallBack
+ //	Software interrupt handler for the timer device. The timer device is
+@@ -44,7 +69,26 @@ void Alarm::CallBack() {
+     Interrupt *interrupt = kernel->interrupt;
+     MachineStatus status = interrupt->getStatus();
+ 
+-    if (status != IdleMode) {
++    // Walk the array and wake any thread whose time has come
++    for (int i = sleepCount - 1; i >= 0; i--) {
++        if (kernel->stats->totalTicks >= sleepQueue[i].wakeTime) {
++            
++            DEBUG('s', "[Sleep] Thread '" << sleepQueue[i].thread->getName()
++                      << "' woke up at tick=" << kernel->stats->totalTicks
++                      << " (was scheduled for tick=" << sleepQueue[i].wakeTime << ")"
++                      << " delta=" << (kernel->stats->totalTicks - sleepQueue[i].wakeTime)
++                      << " tick(s) late\n");
++            
++            // Wake the thread
++            kernel->scheduler->ReadyToRun(sleepQueue[i].thread);
++
++            // Remove by swapping with the last element
++            sleepQueue[i] = sleepQueue[sleepCount - 1];
++            sleepCount--;
++        }
++    }
++
++    if (status != IdleMode || sleepCount > 0) {
+         interrupt->YieldOnReturn();
+     }
+ }
+diff --git a/code/threads/alarm.h b/code/threads/alarm.h
+index af6dd02..455bb2d 100644
+--- a/code/threads/alarm.h
++++ b/code/threads/alarm.h
+@@ -21,6 +21,14 @@
+ #include "utility.h"
+ #include "callback.h"
+ #include "timer.h"
++#include "thread.h" 
++
++#define MAX_SLEEPING_THREADS 300 
++
++struct SleepingThread {
++    Thread *thread;
++    int wakeTime;      // absolute tick count to wake up at
++};
+ 
+ // The following class defines a software alarm clock.
+ class Alarm : public CallBackObj {
+@@ -29,6 +37,7 @@ class Alarm : public CallBackObj {
+                                 // to "toCall" every time slice.
+     ~Alarm() { delete timer; }
+ 
++
+     void WaitUntil(int x);  // suspend execution until time > now + x
+                             // this method is not yet implemented
+ 
+@@ -37,6 +46,9 @@ class Alarm : public CallBackObj {
+ 
+     void CallBack();  // called when the hardware
+                       // timer generates an interrupt
++
++    SleepingThread sleepQueue[MAX_SLEEPING_THREADS]; 
++    int sleepCount;
+ };
+ 
+ #endif  // ALARM_H
+diff --git a/code/threads/scheduler.cc b/code/threads/scheduler.cc
+index 5cce63b..be66fe2 100644
+--- a/code/threads/scheduler.cc
++++ b/code/threads/scheduler.cc
+@@ -11,6 +11,7 @@
+ //	end up calling FindNextToRun(), and that would put us in an
+ //	infinite loop.
+ //
++//
+ // 	Very simple implementation -- no priorities, straight FIFO.
+ //	Might need to be improved in later assignments.
+ //
+@@ -56,7 +57,6 @@ void Scheduler::ReadyToRun(Thread *thread) {
+     thread->setStatus(READY);
+     readyList->Append(thread);
+ }
+-
+ //----------------------------------------------------------------------
+ // Scheduler::FindNextToRun
+ // 	Return the next thread to be scheduled onto the CPU.
+@@ -65,39 +65,35 @@ void Scheduler::ReadyToRun(Thread *thread) {
+ //	Thread is removed from the ready list.
+ //----------------------------------------------------------------------
+ 
++
++
+ Thread *Scheduler::FindNextToRun() {
+     ASSERT(kernel->interrupt->getLevel() == IntOff);
+ 
+     if (readyList->IsEmpty()) {
+         return NULL;
+-    } else {
+-        //return readyList->RemoveFront();
+-	cout<<endl;
+-	cout<<"______________________"<<endl;
+-        //cout<<"NumInList = "<<readyList->NumInList()<<"||"<<endl;
+-        // cout<<endl<<"RL->Front"<<readyList->Front()<<endl;
+-        // cout<<endl<<"||ItemAt 1"<<readyList->ItemAt(0)<<endl;
+-
+-        // cout<<"RL"<<readyList<<endl;
+-        cout<<"Priority number in readyList:"<<endl;
+-        Thread* best = readyList->Front();
+-        cout<<best->priorityNumber<<",";
+-        for(int i = 1;i<readyList->NumInList();i++){
+-            Thread* chk = readyList->ItemAt(i);
+-            cout<<chk->priorityNumber<<",";
+-            if(chk->priorityNumber > best->priorityNumber){
+-                best = chk;
+-            }
+-        }
+-        // cout<<endl<<"RL->Front"<<readyList->Front()<<endl;
+-        readyList->Remove(best);
+-        // cout<<endl<<"Best"<<best<<endl;
+-        cout<<endl<<"Selected Priority number :"<<best->priorityNumber<<endl;
+-        cout<<"________________________"<<endl;
+-	cout<<endl;
+-        return best;
++    }
+ 
++    Thread *best = readyList->Front();
++    int listSize = readyList->NumInList();
++
++    // The 'p' flag is for Priority Scheduling Debugging
++    DEBUG('p', "[Priority] Ready list size: " << listSize);
++    DEBUG('p', "[Priority] Checking: " << best->priorityNumber);
++
++    for (int i = 1; i < listSize; i++) {
++        Thread *current = readyList->ItemAt(i);
++        DEBUG('p', ", " << current->priorityNumber);
++
++        if (current->priorityNumber > best->priorityNumber) {
++            best = current;
++        }
+     }
++
++    readyList->Remove(best);
++    DEBUG('p', " | Selected: " << best->priorityNumber << "\n");
++
++    return best;
+ }
+ 
+ //----------------------------------------------------------------------
+diff --git a/code/threads/thread.h b/code/threads/thread.h
+index 0007cc6..fdbc24a 100644
+--- a/code/threads/thread.h
++++ b/code/threads/thread.h
+@@ -40,11 +40,13 @@
+ #include "copyright.h"
+ #include "utility.h"
+ #include "sysdep.h"
+-#include <cstdlib>
+ 
+ #include "machine.h"
+ #include "addrspace.h"
+ 
++//For rand
++#include <cstdlib>
++
+ // CPU register state to be saved on context switch.
+ // The x86 needs to save only a few registers,
+ // SPARC and MIPS needs to save 10 registers,
+@@ -91,6 +93,8 @@ class Thread {
+     int processID;
+     int parrentID;
+     int exitStatus;
++
++    //Priority
+     int priorityNumber = std::rand()%5;
+ 
+     void FreeSpace() {
+diff --git a/code/userprog/exception.cc b/code/userprog/exception.cc
+index 13b25c0..3fb7134 100644
+--- a/code/userprog/exception.cc
++++ b/code/userprog/exception.cc
+@@ -155,18 +155,28 @@ void handle_SC_Add() {
+ }
+ 
+ void handle_SC_Abs() {
++    DEBUG(dbgSys, "Abs " << kernel->machine->ReadRegister(4) << "\n");
+ 
++    /* Process SysAdd Systemcall*/
+     int result;
+     result = SysAbs(
+-        /* int op1 */ (int)kernel->machine->ReadRegister(4));
++        /* int op */ (int)kernel->machine->ReadRegister(4));
+ 
+-    DEBUG(dbgSys, "Add returning with " << result << "\n");
++    DEBUG(dbgSys, "Abs returning with " << result << "\n");
+     /* Prepare Result */
+     kernel->machine->WriteRegister(2, (int)result);
+ 
+     return move_program_counter();
+ }
+ 
++void handle_SC_Sleep(){
++    int seconds = kernel->machine->ReadRegister(4);  // read arg1 from $r4
++    DEBUG(dbgSys, "Sleep " << seconds << " seconds.\n");
++    SysSleep(seconds);          // calls alarm->WaitUntil internally
++
++    return move_program_counter();  // advance PC so syscall doesn't repeat
++}
++
+ void handle_SC_ReadNum() {
+     int result = SysReadNum();
+     kernel->machine->WriteRegister(2, result);
+@@ -407,6 +417,7 @@ void handle_SC_GetPid() {
+     return move_program_counter();
+ }
+ 
++
+ void ExceptionHandler(ExceptionType which) {
+     int type = kernel->machine->ReadRegister(2);
+ 
+@@ -476,6 +487,8 @@ void ExceptionHandler(ExceptionType which) {
+                     return handle_SC_GetPid();
+                 case SC_Abs:
+                     return handle_SC_Abs();
++                case SC_Sleep:
++                    return handle_SC_Sleep();
+                 /**
+                  * Handle all not implemented syscalls
+                  * If you want to write a new handler for syscall:
+diff --git a/code/userprog/ksyscall.h b/code/userprog/ksyscall.h
+index f9a2a1f..e6caff2 100644
+--- a/code/userprog/ksyscall.h
++++ b/code/userprog/ksyscall.h
+@@ -15,14 +15,25 @@
+ #include "synchconsole.h"
+ #include "ksyscallhelper.h"
+ #include <stdlib.h>
+-#include <limits.h>
++#include "stats.h"
++#include <time.h> 
++
+ #define INT32_MIN 0
+ 
+ void SysHalt() { kernel->interrupt->Halt(); }
+ 
+ int SysAdd(int op1, int op2) { return op1 + op2; }
+ 
+-int SysAbs(int op) { return op > 0 ? op : -op;}
++int SysAbs(int op) { return op > 0 ? op:-op;}
++
++void SysSleep(int ticks) {
++    // Convert seconds → ticks: NachOS runs ~100 ticks/second
++    
++    kernel->alarm->WaitUntil(ticks);
++
++    // clock_t start = clock();
++    // while ((double)(clock() - start) / CLOCKS_PER_SEC < (double)seconds) {}
++}
+ 
+ int SysReadNum() {
+     readUntilBlank();
+diff --git a/code/userprog/syscall.h b/code/userprog/syscall.h
+index cfd0a19..d1a94ce 100644
+--- a/code/userprog/syscall.h
++++ b/code/userprog/syscall.h
+@@ -49,6 +49,7 @@
+ #define SC_Signal 53
+ #define SC_GetPid 54
+ #define SC_Abs 55
++#define SC_Sleep 56
+ 
+ #ifndef IN_ASM
+ 
+@@ -69,8 +70,6 @@ void Halt();
+  * Add the two operants and return the result
+  */
+ 
+- int abs(int);
+-
+ int Add(int op1, int op2);
+ 
+ int ReadNum();
+@@ -213,6 +212,11 @@ int ThreadJoin(ThreadId id);
+  */
+ void ThreadExit(int ExitCode);
+ 
++unsigned int Abs(int);
++
++void Sleep(int t);  // sleep for t seconds (converted to ticks in kernel)
++
++
+ #endif /* IN_ASM */
+ 
+ #endif /* SYSCALL_H */
+diff --git a/install_building_tools.sh b/install_building_tools.sh
+index df3ff0d..94cc07e 100644
+--- a/install_building_tools.sh
++++ b/install_building_tools.sh
+@@ -1,7 +1,7 @@
+ #!/bin/bash
+ set -e
+ 
+-sudo apt-get install gcc g++ gcc-multilib g++-multilib make
++#sudo apt-get install gcc g++ gcc-multilib g++-multilib make
+ 
+ cd ..
+ wget https://www.fit.hcmus.edu.vn/~ntquan/os/assignment/mips-decstation.linux-xgcc.gz
