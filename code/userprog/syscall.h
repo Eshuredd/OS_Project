@@ -50,6 +50,12 @@
 #define SC_GetPid 54
 #define SC_Abs 55
 #define SC_Sleep 56
+#define SC_Pipe 57
+#define SC_PipeRead 58
+#define SC_PipeWrite 59
+#define SC_ExecP 60
+#define SC_ReadInt 61
+#define SC_GetPD 62
 
 #ifndef IN_ASM
 
@@ -64,7 +70,13 @@
  */
 
 /* Stop Nachos, and print out performance stats */
+
+int GetPD();
+
+int ReadInt(char* buffer);
+
 void Halt();
+
 
 /*
  * Add the two operants and return the result
@@ -101,6 +113,14 @@ typedef int ThreadId;
 /* This can be implemented as a call to ExecV.
  */
 SpaceId Exec(char *exec_name);
+
+SpaceId ExecP(char *exec_name, int pDes);
+
+void Pipe(int* x, int* y);
+
+int pipeRead(int desNum, char* buffer, int charCount);
+
+int pipeWrite(int desNum, char* buffer, int charCount);
 
 /* Run the executable, stored in the Nachos file "argv[0]", with
  * parameters stored in argv[1..argc-1] and return the
